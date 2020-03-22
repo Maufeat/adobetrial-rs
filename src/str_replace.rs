@@ -1,8 +1,9 @@
 // This code is from: https://users.rust-lang.org/t/how-to-get-a-substring-of-a-string/1351/10
 
-use std::path::Path;
 use std::fs::File;
-use std::io::prelude::{Read, Write};
+use std::io;
+use std::io::{prelude::*, Write};
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct StrReplace {
@@ -16,7 +17,8 @@ impl StrReplace {
         let mut file = File::open(filepath).unwrap();
         let mut data = String::new();
 
-        file.read_to_string(&mut data).expect("Failed to read file.");
+        file.read_to_string(&mut data)
+            .expect("Failed to read file.");
 
         StrReplace { data: data }
     }
@@ -30,9 +32,14 @@ impl StrReplace {
     }
 
     /// Writes the possibly mutated data to a file at the given destination
-    pub fn to_file(&self, dst: &str) {
-        let mut file = File::create(dst).unwrap();
-        file.write_all(self.data.as_bytes()).expect("Failed to write file.");
+    pub fn to_file(&self, dst: &str) -> Result<bool, io::Error> {
+        match File::create(dst) {
+            Ok(mut file) => match file.write_all(self.data.as_bytes()) {
+                Ok(_) => Ok(true),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
     }
 
     /// Makes a &str out of StrReplace for further use
