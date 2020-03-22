@@ -140,6 +140,9 @@ fn main() {
             adobe_products[choice_nbr - 1].patch_trial();
         }
     }
+    
+    println!("Press ENTER to close this application...");
+    stdin().read_line(&mut String::new()).unwrap();
 }
 
 fn gen_key_range(len: u16) -> String {
