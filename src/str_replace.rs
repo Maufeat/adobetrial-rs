@@ -20,7 +20,7 @@ impl StrReplace {
         file.read_to_string(&mut data)
             .expect("Failed to read file.");
 
-        StrReplace { data: data }
+        StrReplace { data }
     }
 
     /// Replace the occurence of one string with another

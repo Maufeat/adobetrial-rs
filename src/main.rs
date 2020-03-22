@@ -63,7 +63,11 @@ impl AdobeProduct {
 
             match reader.to_file(application_file) {
                 Ok(_) => println!("Successfully Patched {}", self.folder_name),
-                Err(e) => println!("Couldn't Patch {} | Reason: {:?}", self.folder_name, e.to_string()),
+                Err(e) => println!(
+                    "Couldn't Patch {} | Reason: {:?}",
+                    self.folder_name,
+                    e.to_string()
+                ),
             }
         }
     }
@@ -86,24 +90,22 @@ fn main() {
             for path in dir {
                 match path {
                     Ok(entry) => {
-                        if entry.path().is_dir() {
-                            if String::from(entry.path().file_name().unwrap().to_str().unwrap())
+                        if entry.path().is_dir()
+                            && String::from(entry.path().file_name().unwrap().to_str().unwrap())
                                 .contains("Adobe")
-                            {
-                                let mut product = AdobeProduct::new(
-                                    &entry.path().display().to_string(),
-                                    &entry
-                                        .path()
-                                        .file_name()
-                                        .unwrap()
-                                        .to_str()
-                                        .unwrap()
-                                        .to_string(),
-                                );
-                                product
-                                    .merge_application_files(get_application_files(&product.path));
-                                adobe_products.push(product);
-                            }
+                        {
+                            let mut product = AdobeProduct::new(
+                                &entry.path().display().to_string(),
+                                &entry
+                                    .path()
+                                    .file_name()
+                                    .unwrap()
+                                    .to_str()
+                                    .unwrap()
+                                    .to_string(),
+                            );
+                            product.merge_application_files(get_application_files(&product.path));
+                            adobe_products.push(product);
                         }
                     }
                     Err(_error) => (),
@@ -115,7 +117,7 @@ fn main() {
         }
     };
 
-    if adobe_products.len() == 0 {
+    if adobe_products.is_empty() {
         println!("Found no Adobe Products");
     } else {
         println!("Select the Adobe Product where you want to reset your trial:");
@@ -150,30 +152,31 @@ fn gen_key_range(len: u16) -> String {
 }
 
 fn get_application_files(dir: &str) -> Vec<String> {
-    let paths = fs::read_dir(dir).unwrap();
     let mut application_files: Vec<String> = vec![];
 
-    for path in paths {
-        if path.as_ref().unwrap().path().is_dir() {
-            application_files.extend(
-                get_application_files(&path.as_ref().unwrap().path().display().to_string())
-                    .iter()
-                    .cloned(),
-            );
-        } else {
-            if path
-                .as_ref()
-                .unwrap()
-                .path()
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string()
-                == "application.xml"
-            {
-                application_files.push(path.as_ref().unwrap().path().display().to_string());
+    match fs::read_dir(dir) {
+        Ok(dir) => {
+            for path in dir {
+                match path {
+                    Ok(entry) => {
+                        if entry.path().is_dir() {
+                            application_files.extend(
+                                get_application_files(&entry.path().display().to_string())
+                                    .iter()
+                                    .cloned(),
+                            );
+                        } else if entry.path().file_name().unwrap().to_str().unwrap()
+                            == "application.xml"
+                        {
+                            application_files.push(entry.path().display().to_string());
+                        }
+                    }
+                    Err(_error) => (),
+                };
             }
+        }
+        Err(reason) => {
+            println!("Unable ro read directory | Reason: {}", reason.to_string());
         }
     }
 
